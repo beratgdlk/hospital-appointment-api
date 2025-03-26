@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id              Int              @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String           @unique
+  phone           String
+  dateOfBirth     DateTime
+  gender          String
+  address         String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  medicalRecords  MedicalRecord[]
+  appointments    Appointment[]
+}
+
+model Appointment {
+  id              Int      @id @default(autoincrement())
+  date            DateTime
+  status          String   @default("scheduled")
+  doctor          Doctor   @relation(fields: [doctorId], references: [id])
+  doctorId        Int
+  patient         Patient  @relation(fields: [patientId], references: [id])
+  patientId       Int
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Doctor {
+  id                  Int              @id @default(autoincrement())
+  userId              Int              @unique
+  user                User             @relation(fields: [userId], references: [id])
+  department          Department       @relation("DoctorDepartment", fields: [departmentId], references: [id])
+  departmentId        Int
+  specialization      String
+  licenseNumber       String
+  experience          Int
+  education          String
+  appointments        Appointment[]
+  medicalRecords      MedicalRecord[]
+  managedDepartment   Department?      @relation("DepartmentHead", fields: [managedDepartmentId], references: [id])
+  managedDepartmentId Int?            @unique
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  location    String
+  doctors     Doctor[]  @relation("DoctorDepartment")
+  headDoctor  Doctor?   @relation("DepartmentHead")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      String   // admin, doctor, secretary
+  doctor    Doctor?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MedicalRecord {
+  id              Int       @id @default(autoincrement())
+  patient         Patient   @relation(fields: [patientId], references: [id])
+  patientId       Int
+  doctor          Doctor    @relation(fields: [doctorId], references: [id])
+  doctorId        Int
+  diagnosis       String
+  treatment       String
+  prescription    String?
+  notes           String?
+  date            DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("medical_records")
+}
