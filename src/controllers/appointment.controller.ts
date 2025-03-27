@@ -1,111 +1,170 @@
 import { Request, Response, NextFunction } from 'express';
+import { appointmentCreateSchema, appointmentUpdateSchema } from '../schemas/schema.registry';
 import {
   getAllAppointmentsService,
   getAppointmentByIdService,
-  createAppointmentService,
-  updateAppointmentService,
-  deleteAppointmentService,
   getAppointmentsByPatientIdService,
   getAppointmentsByDoctorIdService,
+  createAppointmentService,
+  updateAppointmentService,
+  deleteAppointmentService
 } from '../services/appointment.service';
 import { AppError } from '../middlewares/error.middleware';
 
-export const getAllAppointments = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllAppointments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const appointments = await getAllAppointmentsService();
+    
     res.status(200).json({
       status: 'success',
-      data: appointments,
+      data: {
+        appointments
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getAppointmentById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAppointmentById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const appointment = await getAppointmentByIdService(Number(id));
+    const id = Number(req.params.id);
+    
+    const appointment = await getAppointmentByIdService(id);
+    
     if (!appointment) {
-      throw new AppError('Appointment not found', 404);
+      next(new AppError('Randevu bulunamadı', 404));
+      return;
     }
+    
     res.status(200).json({
       status: 'success',
-      data: appointment,
+      data: {
+        appointment
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getAppointmentsByPatientId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAppointmentsByPatientId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { patientId } = req.params;
-    const appointments = await getAppointmentsByPatientIdService(Number(patientId));
+    const patientId = Number(req.params.patientId);
+    
+    const appointments = await getAppointmentsByPatientIdService(patientId);
+    
     res.status(200).json({
       status: 'success',
-      data: appointments,
+      data: {
+        appointments
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getAppointmentsByDoctorId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAppointmentsByDoctorId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { doctorId } = req.params;
-    const appointments = await getAppointmentsByDoctorIdService(Number(doctorId));
+    const doctorId = Number(req.params.doctorId);
+    
+    const appointments = await getAppointmentsByDoctorIdService(doctorId);
+    
     res.status(200).json({
       status: 'success',
-      data: appointments,
+      data: {
+        appointments
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createAppointment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const createAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const newAppointment = await createAppointmentService(req.body);
+    const appointmentData = appointmentCreateSchema.parse(req.body);
+    
+    const appointment = await createAppointmentService(appointmentData);
+    
     res.status(201).json({
       status: 'success',
-      data: newAppointment,
+      data: {
+        appointment
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateAppointment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingAppointment = await getAppointmentByIdService(Number(id));
+    const id = Number(req.params.id);
+    const appointmentData = appointmentUpdateSchema.parse(req.body);
     
-    if (!existingAppointment) {
-      throw new AppError('Appointment not found', 404);
+    const appointment = await updateAppointmentService(id, appointmentData);
+    
+    if (!appointment) {
+      next(new AppError('Randevu bulunamadı', 404));
+      return;
     }
-
-    const updatedAppointment = await updateAppointmentService(Number(id), req.body);
+    
     res.status(200).json({
       status: 'success',
-      data: updatedAppointment,
+      data: {
+        appointment
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteAppointment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deleteAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingAppointment = await getAppointmentByIdService(Number(id));
+    const id = Number(req.params.id);
     
-    if (!existingAppointment) {
-      throw new AppError('Appointment not found', 404);
+    const appointment = await deleteAppointmentService(id);
+    
+    if (!appointment) {
+      next(new AppError('Randevu bulunamadı', 404));
+      return;
     }
-
-    await deleteAppointmentService(Number(id));
-    res.status(204).send();
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
   } catch (error) {
     next(error);
   }

@@ -10,7 +10,9 @@ export const userSchema = z.object({
   }),
 });
 
-export const userUpdateSchema = userSchema.partial().omit({ password: true });
+export const userUpdateSchema = userSchema.extend({
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır').optional(),
+}).partial();
 
 export const validateUser = (data: unknown) => userSchema.parse(data);
 export const validateUserUpdate = (data: unknown) => userUpdateSchema.parse(data); 

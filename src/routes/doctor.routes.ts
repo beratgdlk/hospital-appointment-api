@@ -1,4 +1,4 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getAllDoctors,
   getDoctorById,
@@ -6,14 +6,14 @@ import {
   updateDoctor,
   deleteDoctor,
 } from '../controllers/doctor.controller';
-import { validate } from '../middlewares/validation.middleware';
-import { doctorSchema, doctorUpdateSchema } from '../validations/doctor.validation';
+import validate from '../middlewares/validate';
+import { doctorCreateSchema, doctorUpdateSchema } from '../schemas/schema.registry';
 
-const router = express.Router();
+const router: Router = Router();
 
 router.get('/', getAllDoctors);
 router.get('/:id', getDoctorById);
-router.post('/', validate(doctorSchema), createDoctor);
+router.post('/', validate(doctorCreateSchema), createDoctor);
 router.put('/:id', validate(doctorUpdateSchema), updateDoctor);
 router.delete('/:id', deleteDoctor);
 

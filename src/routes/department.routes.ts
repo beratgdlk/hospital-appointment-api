@@ -1,4 +1,4 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getAllDepartments,
   getDepartmentById,
@@ -6,14 +6,14 @@ import {
   updateDepartment,
   deleteDepartment,
 } from '../controllers/department.controller';
-import { validate } from '../middlewares/validation.middleware';
-import { departmentSchema, departmentUpdateSchema } from '../validations/department.validation';
+import validate from '../middlewares/validate';
+import { departmentCreateSchema, departmentUpdateSchema } from '../schemas/schema.registry';
 
-const router = express.Router();
+const router: Router = Router();
 
 router.get('/', getAllDepartments);
 router.get('/:id', getDepartmentById);
-router.post('/', validate(departmentSchema), createDepartment);
+router.post('/', validate(departmentCreateSchema), createDepartment);
 router.put('/:id', validate(departmentUpdateSchema), updateDepartment);
 router.delete('/:id', deleteDepartment);
 

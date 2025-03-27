@@ -1,130 +1,194 @@
 import { prisma } from '../config/database';
-import { z } from 'zod';
+import { Patient } from '../types/types';
+import { patientCreateSchema, patientSchema, patientUpdateSchema } from '../schemas/schema.registry';
 
-export const getAllPatientsService = async () => {
-  return prisma.patient.findMany({
+export const getAllPatientsService = async (): Promise<Patient[]> => {
+  const patients = await prisma.patient.findMany({
     include: {
-      appointments: {
-        include: {
-          doctor: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  role: true,
-                },
-              },
-              department: true,
-            },
-          },
-        },
-      },
       medicalRecords: {
         include: {
           doctor: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  role: true,
-                },
-              },
-              department: true,
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
             },
           },
         },
       },
     },
   });
+
+  return patients.map(patient => patientSchema.parse(patient) as Patient);
 };
 
-export const getPatientByIdService = async (id: number) => {
-  return prisma.patient.findUnique({
+export const getPatientByIdService = async (id: number): Promise<Patient | null> => {
+  const patient = await prisma.patient.findUnique({
     where: { id },
     include: {
-      appointments: {
-        include: {
-          doctor: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  role: true,
-                },
-              },
-              department: true,
-            },
-          },
-        },
-      },
       medicalRecords: {
         include: {
           doctor: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  role: true,
-                },
-              },
-              department: true,
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
             },
           },
         },
       },
     },
   });
+
+  return patient ? (patientSchema.parse(patient) as Patient) : null;
 };
 
-export const getPatientByEmailService = async (email: string) => {
-  return prisma.patient.findUnique({
+export const getPatientByEmailService = async (email: string): Promise<Patient | null> => {
+  const patient = await prisma.patient.findUnique({
     where: { email },
-  });
-};
-
-export const createPatientService = async (data: z.infer<typeof import('../validations/patient.validation').patientSchema>) => {
-  return prisma.patient.create({
-    data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      dateOfBirth: new Date(data.dateOfBirth),
-      gender: data.gender,
-      address: data.address,
+    include: {
+      medicalRecords: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
     },
   });
+
+  return patient ? (patientSchema.parse(patient) as Patient) : null;
 };
 
-export const updatePatientService = async (id: number, data: z.infer<typeof import('../validations/patient.validation').patientUpdateSchema>) => {
-  const updateData: any = {
-    ...data,
-  };
+export const createPatientService = async (data: unknown): Promise<Patient> => {
+  const validatedData = patientCreateSchema.parse(data);
+  
+  // Convert string date to Date object if needed
+  const dateOfBirth = typeof validatedData.dateOfBirth === 'string' 
+    ? new Date(validatedData.dateOfBirth) 
+    : validatedData.dateOfBirth;
 
-  if (data.dateOfBirth) {
-    updateData.dateOfBirth = new Date(data.dateOfBirth);
+  const patient = await prisma.patient.create({
+    data: {
+      ...validatedData,
+      dateOfBirth,
+    },
+    include: {
+      medicalRecords: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return patientSchema.parse(patient) as Patient;
+};
+
+export const updatePatientService = async (
+  id: number, 
+  data: unknown
+): Promise<Patient> => {
+  const validatedData = patientUpdateSchema.parse(data);
+  
+  // Convert string date to Date object if needed
+  let updateData: any = { ...validatedData };
+  if (validatedData.dateOfBirth) {
+    updateData.dateOfBirth = typeof validatedData.dateOfBirth === 'string' 
+      ? new Date(validatedData.dateOfBirth) 
+      : validatedData.dateOfBirth;
   }
 
-  return prisma.patient.update({
+  const patient = await prisma.patient.update({
     where: { id },
     data: updateData,
+    include: {
+      medicalRecords: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
   });
+
+  return patientSchema.parse(patient) as Patient;
 };
 
-export const deletePatientService = async (id: number) => {
-  return prisma.patient.delete({
+export const deletePatientService = async (id: number): Promise<Patient> => {
+  const patient = await prisma.patient.delete({
     where: { id },
+    include: {
+      medicalRecords: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+      appointments: {
+        include: {
+          doctor: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
   });
+
+  return patientSchema.parse(patient) as Patient;
 };

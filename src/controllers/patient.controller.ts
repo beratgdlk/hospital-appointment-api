@@ -1,96 +1,153 @@
 import { Request, Response, NextFunction } from 'express';
+import { patientCreateSchema, patientUpdateSchema } from '../schemas/schema.registry';
 import {
   getAllPatientsService,
   getPatientByIdService,
   getPatientByEmailService,
   createPatientService,
   updatePatientService,
-  deletePatientService,
+  deletePatientService
 } from '../services/patient.service';
 import { AppError } from '../middlewares/error.middleware';
 
-export const getAllPatients = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllPatients = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const patients = await getAllPatientsService();
+    
     res.status(200).json({
       status: 'success',
-      data: patients,
+      data: {
+        patients
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getPatientById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getPatientById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const patient = await getPatientByIdService(Number(id));
+    const id = Number(req.params.id);
+    
+    const patient = await getPatientByIdService(id);
+    
     if (!patient) {
-      throw new AppError('Patient not found', 404);
+      next(new AppError('Hasta bulunamadı', 404));
+      return;
     }
+    
     res.status(200).json({
       status: 'success',
-      data: patient,
+      data: {
+        patient
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createPatient = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getPatientByEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const existingPatient = await getPatientByEmailService(req.body.email);
-    if (existingPatient) {
-      throw new AppError('A patient with this email already exists', 400);
+    const email = req.params.email;
+    
+    const patient = await getPatientByEmailService(email);
+    
+    if (!patient) {
+      next(new AppError('Hasta bulunamadı', 404));
+      return;
     }
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        patient
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const newPatient = await createPatientService(req.body);
+export const createPatient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const patientData = patientCreateSchema.parse(req.body);
+    
+    const patient = await createPatientService(patientData);
+    
     res.status(201).json({
       status: 'success',
-      data: newPatient,
+      data: {
+        patient
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updatePatient = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updatePatient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingPatient = await getPatientByIdService(Number(id));
+    const id = Number(req.params.id);
+    const patientData = patientUpdateSchema.parse(req.body);
     
-    if (!existingPatient) {
-      throw new AppError('Patient not found', 404);
+    const patient = await updatePatientService(id, patientData);
+    
+    if (!patient) {
+      next(new AppError('Hasta bulunamadı', 404));
+      return;
     }
-
-    if (req.body.email && req.body.email !== existingPatient.email) {
-      const patientWithEmail = await getPatientByEmailService(req.body.email);
-      if (patientWithEmail) {
-        throw new AppError('A patient with this email already exists', 400);
-      }
-    }
-
-    const updatedPatient = await updatePatientService(Number(id), req.body);
+    
     res.status(200).json({
       status: 'success',
-      data: updatedPatient,
+      data: {
+        patient
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deletePatient = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deletePatient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingPatient = await getPatientByIdService(Number(id));
+    const id = Number(req.params.id);
     
-    if (!existingPatient) {
-      throw new AppError('Patient not found', 404);
+    const patient = await deletePatientService(id);
+    
+    if (!patient) {
+      next(new AppError('Hasta bulunamadı', 404));
+      return;
     }
-
-    await deletePatientService(Number(id));
-    res.status(204).send();
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
   } catch (error) {
     next(error);
   }

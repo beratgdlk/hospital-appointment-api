@@ -1,100 +1,116 @@
 import { prisma } from '../config/database';
-import { z } from 'zod';
+import { User } from '../types/types';
+import { userCreateSchema, userSchema, userUpdateSchema } from '../schemas/schema.registry';
 import bcrypt from 'bcrypt';
 
-export const getAllUsersService = async () => {
-  return prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
+export const getAllUsersService = async (): Promise<User[]> => {
+  const users = await prisma.user.findMany({
+    include: {
       doctor: {
         include: {
           department: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-    },
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return users.map(user => userSchema.parse(user) as User);
 };
 
-export const getUserByIdService = async (id: number) => {
-  return prisma.user.findUnique({
+export const getUserByIdService = async (id: number): Promise<User | null> => {
+  const user = await prisma.user.findUnique({
     where: { id },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
+    include: {
       doctor: {
         include: {
           department: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-    },
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return user ? (userSchema.parse(user) as User) : null;
 };
 
-export const getUserByEmailService = async (email: string) => {
-  return prisma.user.findUnique({
+export const getUserByEmailService = async (email: string): Promise<User | null> => {
+  const user = await prisma.user.findUnique({
     where: { email },
+    include: {
+      doctor: {
+        include: {
+          department: true,
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return user ? (userSchema.parse(user) as User) : null;
 };
 
-export const createUserService = async (data: z.infer<typeof import('../validations/user.validation').userSchema>) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-  return prisma.user.create({
+export const createUserService = async (data: unknown): Promise<User> => {
+  const validatedData = userCreateSchema.parse(data);
+  const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
+  const user = await prisma.user.create({
     data: {
-      email: data.email,
-      password: hashedPassword,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      role: data.role,
+      ...validatedData,
+      password: hashedPassword
     },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    include: {
+      doctor: {
+        include: {
+          department: true,
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return userSchema.parse(user) as User;
 };
 
-export const updateUserService = async (id: number, data: z.infer<typeof import('../validations/user.validation').userUpdateSchema>) => {
-  const updateData: any = {
-    ...data,
-  };
+export const updateUserService = async (
+  id: number, 
+  data: unknown
+): Promise<User> => {
+  const validatedData = userUpdateSchema.parse(data);
+  let updateData: any = { ...validatedData };
 
-  if (data.password) {
-    updateData.password = await bcrypt.hash(data.password, 10);
+  if (validatedData.password) {
+    updateData.password = await bcrypt.hash(validatedData.password, 10);
   }
 
-  return prisma.user.update({
+  const user = await prisma.user.update({
     where: { id },
     data: updateData,
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    include: {
+      doctor: {
+        include: {
+          department: true,
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return userSchema.parse(user) as User;
 };
 
-export const deleteUserService = async (id: number) => {
-  return prisma.user.delete({
+export const deleteUserService = async (id: number): Promise<User> => {
+  const user = await prisma.user.delete({
     where: { id },
+    include: {
+      doctor: {
+        include: {
+          department: true,
+          managedDepartment: true
+        }
+      }
+    }
   });
+
+  return userSchema.parse(user) as User;
 }; 

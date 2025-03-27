@@ -1,83 +1,181 @@
 import { Request, Response, NextFunction } from 'express';
+import { departmentCreateSchema, departmentUpdateSchema } from '../schemas/schema.registry';
 import {
   getAllDepartmentsService,
   getDepartmentByIdService,
   createDepartmentService,
   updateDepartmentService,
   deleteDepartmentService,
+  assignHeadDoctorService,
+  removeHeadDoctorService
 } from '../services/department.service';
 import { AppError } from '../middlewares/error.middleware';
 
-export const getAllDepartments = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllDepartments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const departments = await getAllDepartmentsService();
+    
     res.status(200).json({
       status: 'success',
-      data: departments,
+      data: {
+        departments
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getDepartmentById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getDepartmentById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const department = await getDepartmentByIdService(Number(id));
+    const id = Number(req.params.id);
+    
+    const department = await getDepartmentByIdService(id);
+    
     if (!department) {
-      throw new AppError('Department not found', 404);
+      next(new AppError('Departman bulunamadı', 404));
+      return;
     }
+    
     res.status(200).json({
       status: 'success',
-      data: department,
+      data: {
+        department
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const createDepartment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const newDepartment = await createDepartmentService(req.body);
+    const departmentData = departmentCreateSchema.parse(req.body);
+    
+    const department = await createDepartmentService(departmentData);
+    
     res.status(201).json({
       status: 'success',
-      data: newDepartment,
+      data: {
+        department
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateDepartment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingDepartment = await getDepartmentByIdService(Number(id));
+    const id = Number(req.params.id);
+    const departmentData = departmentUpdateSchema.parse(req.body);
     
-    if (!existingDepartment) {
-      throw new AppError('Department not found', 404);
+    const department = await updateDepartmentService(id, departmentData);
+    
+    if (!department) {
+      next(new AppError('Departman bulunamadı', 404));
+      return;
     }
-
-    const updatedDepartment = await updateDepartmentService(Number(id), req.body);
+    
     res.status(200).json({
       status: 'success',
-      data: updatedDepartment,
+      data: {
+        department
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deleteDepartment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingDepartment = await getDepartmentByIdService(Number(id));
+    const id = Number(req.params.id);
     
-    if (!existingDepartment) {
-      throw new AppError('Department not found', 404);
+    const department = await deleteDepartmentService(id);
+    
+    if (!department) {
+      next(new AppError('Departman bulunamadı', 404));
+      return;
     }
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    await deleteDepartmentService(Number(id));
-    res.status(204).send();
+export const assignHeadDoctor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const departmentId = Number(req.params.departmentId);
+    const doctorId = Number(req.params.doctorId);
+    
+    const department = await assignHeadDoctorService(departmentId, doctorId);
+    
+    if (!department) {
+      next(new AppError('Departman veya doktor bulunamadı', 404));
+      return;
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        department
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeHeadDoctor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const departmentId = Number(req.params.departmentId);
+    
+    const department = await removeHeadDoctorService(departmentId);
+    
+    if (!department) {
+      next(new AppError('Departman bulunamadı', 404));
+      return;
+    }
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        department
+      }
+    });
   } catch (error) {
     next(error);
   }

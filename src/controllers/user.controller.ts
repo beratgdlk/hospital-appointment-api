@@ -1,106 +1,153 @@
 import { Request, Response, NextFunction } from 'express';
+import { userCreateSchema, userUpdateSchema } from '../schemas/schema.registry';
 import {
   getAllUsersService,
   getUserByIdService,
+  getUserByEmailService,
   createUserService,
   updateUserService,
-  deleteUserService,
-  getUserByEmailService,
+  deleteUserService
 } from '../services/user.service';
 import { AppError } from '../middlewares/error.middleware';
-import bcrypt from 'bcrypt';
 
-export const getAllUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const users = await getAllUsersService();
+    
     res.status(200).json({
       status: 'success',
-      data: users,
+      data: {
+        users
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getUserById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getUserById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const user = await getUserByIdService(Number(id));
+    const id = Number(req.params.id);
+    
+    const user = await getUserByIdService(id);
+    
     if (!user) {
-      throw new AppError('User not found', 404);
+      next(new AppError('Kullanıcı bulunamadı', 404));
+      return;
     }
+    
     res.status(200).json({
       status: 'success',
-      data: user,
+      data: {
+        user
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getUserByEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const existingUser = await getUserByEmailService(req.body.email);
-    if (existingUser) {
-      throw new AppError('A user with this email already exists', 400);
+    const email = req.params.email;
+    
+    const user = await getUserByEmailService(email);
+    
+    if (!user) {
+      next(new AppError('Kullanıcı bulunamadı', 404));
+      return;
     }
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const userData = { ...req.body, password: hashedPassword };
-
-    const newUser = await createUserService(userData);
+export const createUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userData = userCreateSchema.parse(req.body);
+    
+    const user = await createUserService(userData);
+    
     res.status(201).json({
       status: 'success',
-      data: newUser,
+      data: {
+        user
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingUser = await getUserByIdService(Number(id));
+    const id = Number(req.params.id);
+    const userData = userUpdateSchema.parse(req.body);
     
-    if (!existingUser) {
-      throw new AppError('User not found', 404);
+    const user = await updateUserService(id, userData);
+    
+    if (!user) {
+      next(new AppError('Kullanıcı bulunamadı', 404));
+      return;
     }
-
-    if (req.body.email && req.body.email !== existingUser.email) {
-      const userWithEmail = await getUserByEmailService(req.body.email);
-      if (userWithEmail) {
-        throw new AppError('A user with this email already exists', 400);
-      }
-    }
-
-    // Hash password if it's being updated
-    if (req.body.password) {
-      req.body.password = await bcrypt.hash(req.body.password, 10);
-    }
-
-    const updatedUser = await updateUserService(Number(id), req.body);
+    
     res.status(200).json({
       status: 'success',
-      data: updatedUser,
+      data: {
+        user
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingUser = await getUserByIdService(Number(id));
+    const id = Number(req.params.id);
     
-    if (!existingUser) {
-      throw new AppError('User not found', 404);
+    const user = await deleteUserService(id);
+    
+    if (!user) {
+      next(new AppError('Kullanıcı bulunamadı', 404));
+      return;
     }
-
-    await deleteUserService(Number(id));
-    res.status(204).send();
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
   } catch (error) {
     next(error);
   }

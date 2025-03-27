@@ -1,97 +1,148 @@
 import { Request, Response, NextFunction } from 'express';
+import { medicalRecordCreateSchema, medicalRecordUpdateSchema } from '../schemas/schema.registry';
 import {
   getAllMedicalRecordsService,
   getMedicalRecordByIdService,
+  getMedicalRecordsByPatientIdService,
   createMedicalRecordService,
   updateMedicalRecordService,
-  deleteMedicalRecordService,
-  getMedicalRecordsByPatientIdService,
+  deleteMedicalRecordService
 } from '../services/medical-record.service';
 import { AppError } from '../middlewares/error.middleware';
 
-export const getAllMedicalRecords = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllMedicalRecords = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const medicalRecords = await getAllMedicalRecordsService();
+    const records = await getAllMedicalRecordsService();
+    
     res.status(200).json({
       status: 'success',
-      data: medicalRecords,
+      data: {
+        records
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getMedicalRecordById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getMedicalRecordById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const medicalRecord = await getMedicalRecordByIdService(Number(id));
-    if (!medicalRecord) {
-      throw new AppError('Medical record not found', 404);
+    const id = Number(req.params.id);
+    
+    const record = await getMedicalRecordByIdService(id);
+    
+    if (!record) {
+      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      return;
     }
+    
     res.status(200).json({
       status: 'success',
-      data: medicalRecord,
+      data: {
+        record
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getMedicalRecordsByPatientId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getMedicalRecordsByPatientId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { patientId } = req.params;
-    const medicalRecords = await getMedicalRecordsByPatientIdService(Number(patientId));
+    const patientId = Number(req.params.patientId);
+    
+    const records = await getMedicalRecordsByPatientIdService(patientId);
+    
     res.status(200).json({
       status: 'success',
-      data: medicalRecords,
+      data: {
+        records
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createMedicalRecord = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const createMedicalRecord = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const newMedicalRecord = await createMedicalRecordService(req.body);
+    const recordData = medicalRecordCreateSchema.parse(req.body);
+    
+    const record = await createMedicalRecordService(recordData);
+    
     res.status(201).json({
       status: 'success',
-      data: newMedicalRecord,
+      data: {
+        record
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updateMedicalRecord = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateMedicalRecord = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingRecord = await getMedicalRecordByIdService(Number(id));
+    const id = Number(req.params.id);
+    const recordData = medicalRecordUpdateSchema.parse(req.body);
     
-    if (!existingRecord) {
-      throw new AppError('Medical record not found', 404);
+    const record = await updateMedicalRecordService(id, recordData);
+    
+    if (!record) {
+      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      return;
     }
-
-    const updatedMedicalRecord = await updateMedicalRecordService(Number(id), req.body);
+    
     res.status(200).json({
       status: 'success',
-      data: updatedMedicalRecord,
+      data: {
+        record
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteMedicalRecord = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deleteMedicalRecord = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const { id } = req.params;
-    const existingRecord = await getMedicalRecordByIdService(Number(id));
+    const id = Number(req.params.id);
     
-    if (!existingRecord) {
-      throw new AppError('Medical record not found', 404);
+    const record = await deleteMedicalRecordService(id);
+    
+    if (!record) {
+      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      return;
     }
-
-    await deleteMedicalRecordService(Number(id));
-    res.status(204).send();
+    
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
   } catch (error) {
     next(error);
   }

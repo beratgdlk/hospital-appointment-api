@@ -1,19 +1,21 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getAllPatients,
   getPatientById,
+  getPatientByEmail,
   createPatient,
   updatePatient,
   deletePatient,
 } from '../controllers/patient.controller';
-import { validate } from '../middlewares/validation.middleware';
-import { patientSchema, patientUpdateSchema } from '../validations/patient.validation';
+import validate from '../middlewares/validate';
+import { patientCreateSchema, patientUpdateSchema } from '../schemas/schema.registry';
 
-const router = express.Router();
+const router: Router = Router();
 
 router.get('/', getAllPatients);
 router.get('/:id', getPatientById);
-router.post('/', validate(patientSchema), createPatient);
+router.get('/email/:email', getPatientByEmail);
+router.post('/', validate(patientCreateSchema), createPatient);
 router.put('/:id', validate(patientUpdateSchema), updatePatient);
 router.delete('/:id', deletePatient);
 
