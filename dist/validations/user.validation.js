@@ -11,7 +11,9 @@ exports.userSchema = zod_1.z.object({
         errorMap: () => ({ message: 'Geçerli bir rol seçiniz (admin, doctor, secretary)' }),
     }),
 });
-exports.userUpdateSchema = exports.userSchema.partial().omit({ password: true });
+exports.userUpdateSchema = exports.userSchema.extend({
+    password: zod_1.z.string().min(6, 'Şifre en az 6 karakter olmalıdır').optional(),
+}).partial();
 const validateUser = (data) => exports.userSchema.parse(data);
 exports.validateUser = validateUser;
 const validateUserUpdate = (data) => exports.userUpdateSchema.parse(data);

@@ -1,9 +1,14 @@
-import { prisma } from '../config/database';
-import { Appointment } from '../types/types';
-import { appointmentCreateSchema, appointmentSchema, appointmentUpdateSchema } from '../schemas/schema.registry';
+import { PrismaClient } from '@prisma/client';
+import { AppointmentCreate, AppointmentUpdate } from '../schemas/schema.registry';
 
-export const getAllAppointmentsService = async (): Promise<Appointment[]> => {
-  const appointments = await prisma.appointment.findMany({
+const prismaClient = new PrismaClient();
+
+/**
+ * Tüm randevuları getirir
+ * @returns Tüm randevular
+ */
+export const getAllAppointmentsService = async () => {
+  return await prismaClient.appointment.findMany({
     include: {
       doctor: {
         include: {
@@ -14,12 +19,15 @@ export const getAllAppointmentsService = async (): Promise<Appointment[]> => {
       patient: true,
     },
   });
-
-  return appointments.map(appointment => appointmentSchema.parse(appointment) as Appointment);
 };
 
-export const getAppointmentByIdService = async (id: number): Promise<Appointment | null> => {
-  const appointment = await prisma.appointment.findUnique({
+/**
+ * ID'ye göre randevu getirir
+ * @param id Randevu ID'si
+ * @returns Randevu
+ */
+export const getAppointmentByIdService = async (id: number) => {
+  return await prismaClient.appointment.findUnique({
     where: { id },
     include: {
       doctor: {
@@ -31,12 +39,15 @@ export const getAppointmentByIdService = async (id: number): Promise<Appointment
       patient: true,
     },
   });
-
-  return appointment ? (appointmentSchema.parse(appointment) as Appointment) : null;
 };
 
-export const getAppointmentsByPatientIdService = async (patientId: number): Promise<Appointment[]> => {
-  const appointments = await prisma.appointment.findMany({
+/**
+ * Hasta ID'sine göre randevuları getirir
+ * @param patientId Hasta ID'si
+ * @returns Randevular
+ */
+export const getAppointmentsByPatientIdService = async (patientId: number) => {
+  return await prismaClient.appointment.findMany({
     where: { patientId },
     include: {
       doctor: {
@@ -48,12 +59,15 @@ export const getAppointmentsByPatientIdService = async (patientId: number): Prom
       patient: true,
     },
   });
-
-  return appointments.map(appointment => appointmentSchema.parse(appointment) as Appointment);
 };
 
-export const getAppointmentsByDoctorIdService = async (doctorId: number): Promise<Appointment[]> => {
-  const appointments = await prisma.appointment.findMany({
+/**
+ * Doktor ID'sine göre randevuları getirir
+ * @param doctorId Doktor ID'si
+ * @returns Randevular
+ */
+export const getAppointmentsByDoctorIdService = async (doctorId: number) => {
+  return await prismaClient.appointment.findMany({
     where: { doctorId },
     include: {
       doctor: {
@@ -65,24 +79,21 @@ export const getAppointmentsByDoctorIdService = async (doctorId: number): Promis
       patient: true,
     },
   });
-
-  return appointments.map(appointment => appointmentSchema.parse(appointment) as Appointment);
 };
 
-export const createAppointmentService = async (data: unknown): Promise<Appointment> => {
-  const validatedData = appointmentCreateSchema.parse(data);
-  
-  const appointment = await prisma.appointment.create({
+/**
+ * Yeni randevu oluşturur
+ * @param data Randevu verileri
+ * @returns Oluşturulan randevu
+ */
+export const createAppointmentService = async (validatedData: AppointmentCreate) => {
+  return await prismaClient.appointment.create({
     data: {
       date: validatedData.date,
-      status: validatedData.status || 'Beklemede',
+      status: validatedData.status ? validatedData.status as any : 'scheduled',
+      doctorId: validatedData.doctorId,
+      patientId: validatedData.patientId,
       notes: validatedData.notes || null,
-      doctor: {
-        connect: { id: validatedData.doctorId },
-      },
-      patient: {
-        connect: { id: validatedData.patientId },
-      },
     },
     include: {
       doctor: {
@@ -94,34 +105,24 @@ export const createAppointmentService = async (data: unknown): Promise<Appointme
       patient: true,
     },
   });
-
-  return appointmentSchema.parse(appointment) as Appointment;
 };
 
-export const updateAppointmentService = async (
-  id: number, 
-  data: unknown
-): Promise<Appointment> => {
-  const validatedData = appointmentUpdateSchema.parse(data);
-  const updateData: any = { ...validatedData };
-  
-  if (validatedData.doctorId) {
-    updateData.doctor = {
-      connect: { id: validatedData.doctorId },
-    };
-    delete updateData.doctorId;
-  }
-  
-  if (validatedData.patientId) {
-    updateData.patient = {
-      connect: { id: validatedData.patientId },
-    };
-    delete updateData.patientId;
-  }
-  
-  const appointment = await prisma.appointment.update({
+/**
+ * Randevu günceller
+ * @param id Randevu ID'si
+ * @param data Güncelleme verileri
+ * @returns Güncellenen randevu
+ */
+export const updateAppointmentService = async (id: number, validatedData: AppointmentUpdate) => {
+  return await prismaClient.appointment.update({
     where: { id },
-    data: updateData,
+    data: {
+      date: validatedData.date,
+      status: validatedData.status ? validatedData.status as any : undefined,
+      doctorId: validatedData.doctorId,
+      patientId: validatedData.patientId,
+      notes: validatedData.notes,
+    },
     include: {
       doctor: {
         include: {
@@ -132,23 +133,15 @@ export const updateAppointmentService = async (
       patient: true,
     },
   });
-
-  return appointmentSchema.parse(appointment) as Appointment;
 };
 
-export const deleteAppointmentService = async (id: number): Promise<Appointment> => {
-  const appointment = await prisma.appointment.delete({
+/**
+ * Randevu siler
+ * @param id Randevu ID'si
+ * @returns Silinen randevu
+ */
+export const deleteAppointmentService = async (id: number) => {
+  return await prismaClient.appointment.delete({
     where: { id },
-    include: {
-      doctor: {
-        include: {
-          user: true,
-          department: true,
-        },
-      },
-      patient: true,
-    },
   });
-
-  return appointmentSchema.parse(appointment) as Appointment;
 }; 

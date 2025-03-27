@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAppointment = exports.updateAppointment = exports.createAppointment = exports.getAppointmentsByDoctorId = exports.getAppointmentsByPatientId = exports.getAppointmentById = exports.getAllAppointments = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const appointment_service_1 = require("../services/appointment.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
 const getAllAppointments = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -17,7 +18,9 @@ const getAllAppointments = (req, res, next) => __awaiter(void 0, void 0, void 0,
         const appointments = yield (0, appointment_service_1.getAllAppointmentsService)();
         res.status(200).json({
             status: 'success',
-            data: appointments,
+            data: {
+                appointments
+            }
         });
     }
     catch (error) {
@@ -27,14 +30,17 @@ const getAllAppointments = (req, res, next) => __awaiter(void 0, void 0, void 0,
 exports.getAllAppointments = getAllAppointments;
 const getAppointmentById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const appointment = yield (0, appointment_service_1.getAppointmentByIdService)(Number(id));
+        const id = Number(req.params.id);
+        const appointment = yield (0, appointment_service_1.getAppointmentByIdService)(id);
         if (!appointment) {
-            throw new error_middleware_1.AppError('Appointment not found', 404);
+            next(new error_middleware_1.AppError('Randevu bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: appointment,
+            data: {
+                appointment
+            }
         });
     }
     catch (error) {
@@ -44,11 +50,13 @@ const getAppointmentById = (req, res, next) => __awaiter(void 0, void 0, void 0,
 exports.getAppointmentById = getAppointmentById;
 const getAppointmentsByPatientId = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { patientId } = req.params;
-        const appointments = yield (0, appointment_service_1.getAppointmentsByPatientIdService)(Number(patientId));
+        const patientId = Number(req.params.patientId);
+        const appointments = yield (0, appointment_service_1.getAppointmentsByPatientIdService)(patientId);
         res.status(200).json({
             status: 'success',
-            data: appointments,
+            data: {
+                appointments
+            }
         });
     }
     catch (error) {
@@ -58,11 +66,13 @@ const getAppointmentsByPatientId = (req, res, next) => __awaiter(void 0, void 0,
 exports.getAppointmentsByPatientId = getAppointmentsByPatientId;
 const getAppointmentsByDoctorId = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { doctorId } = req.params;
-        const appointments = yield (0, appointment_service_1.getAppointmentsByDoctorIdService)(Number(doctorId));
+        const doctorId = Number(req.params.doctorId);
+        const appointments = yield (0, appointment_service_1.getAppointmentsByDoctorIdService)(doctorId);
         res.status(200).json({
             status: 'success',
-            data: appointments,
+            data: {
+                appointments
+            }
         });
     }
     catch (error) {
@@ -72,10 +82,13 @@ const getAppointmentsByDoctorId = (req, res, next) => __awaiter(void 0, void 0, 
 exports.getAppointmentsByDoctorId = getAppointmentsByDoctorId;
 const createAppointment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const newAppointment = yield (0, appointment_service_1.createAppointmentService)(req.body);
+        const appointmentData = schema_registry_1.appointmentCreateSchema.parse(req.body);
+        const appointment = yield (0, appointment_service_1.createAppointmentService)(appointmentData);
         res.status(201).json({
             status: 'success',
-            data: newAppointment,
+            data: {
+                appointment
+            }
         });
     }
     catch (error) {
@@ -85,15 +98,18 @@ const createAppointment = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 exports.createAppointment = createAppointment;
 const updateAppointment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingAppointment = yield (0, appointment_service_1.getAppointmentByIdService)(Number(id));
-        if (!existingAppointment) {
-            throw new error_middleware_1.AppError('Appointment not found', 404);
+        const id = Number(req.params.id);
+        const appointmentData = schema_registry_1.appointmentUpdateSchema.parse(req.body);
+        const appointment = yield (0, appointment_service_1.updateAppointmentService)(id, appointmentData);
+        if (!appointment) {
+            next(new error_middleware_1.AppError('Randevu bulunamadı', 404));
+            return;
         }
-        const updatedAppointment = yield (0, appointment_service_1.updateAppointmentService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedAppointment,
+            data: {
+                appointment
+            }
         });
     }
     catch (error) {
@@ -103,13 +119,16 @@ const updateAppointment = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 exports.updateAppointment = updateAppointment;
 const deleteAppointment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingAppointment = yield (0, appointment_service_1.getAppointmentByIdService)(Number(id));
-        if (!existingAppointment) {
-            throw new error_middleware_1.AppError('Appointment not found', 404);
+        const id = Number(req.params.id);
+        const appointment = yield (0, appointment_service_1.deleteAppointmentService)(id);
+        if (!appointment) {
+            next(new error_middleware_1.AppError('Randevu bulunamadı', 404));
+            return;
         }
-        yield (0, appointment_service_1.deleteAppointmentService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);

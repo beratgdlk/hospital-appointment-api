@@ -32,6 +32,7 @@ model Patient {
   updatedAt       DateTime         @updatedAt
   medicalRecords  MedicalRecord[]
   appointments    Appointment[]
+  history         PatientHistory[]
 }
 
 model Appointment {
@@ -103,4 +104,19 @@ model MedicalRecord {
   updatedAt       DateTime  @updatedAt
 
   @@map("medical_records")
+}
+
+model PatientHistory {
+  id          Int      @id @default(autoincrement())
+  patientId   Int
+  recordType  String   // 'appointment', 'medical_record', 'prescription', 'test_result', 'other'
+  recordId    Int
+  action      String   // 'created', 'updated', 'canceled', 'completed'
+  details     String?
+  performedBy Int
+  performedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patient     Patient  @relation(fields: [patientId], references: [id])
 }

@@ -10,14 +10,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteMedicalRecord = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getMedicalRecordsByPatientId = exports.getMedicalRecordById = exports.getAllMedicalRecords = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const medical_record_service_1 = require("../services/medical-record.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
 const getAllMedicalRecords = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const medicalRecords = yield (0, medical_record_service_1.getAllMedicalRecordsService)();
+        const records = yield (0, medical_record_service_1.getAllMedicalRecordsService)();
         res.status(200).json({
             status: 'success',
-            data: medicalRecords,
+            data: {
+                records
+            }
         });
     }
     catch (error) {
@@ -27,14 +30,17 @@ const getAllMedicalRecords = (req, res, next) => __awaiter(void 0, void 0, void 
 exports.getAllMedicalRecords = getAllMedicalRecords;
 const getMedicalRecordById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const medicalRecord = yield (0, medical_record_service_1.getMedicalRecordByIdService)(Number(id));
-        if (!medicalRecord) {
-            throw new error_middleware_1.AppError('Medical record not found', 404);
+        const id = Number(req.params.id);
+        const record = yield (0, medical_record_service_1.getMedicalRecordByIdService)(id);
+        if (!record) {
+            next(new error_middleware_1.AppError('Tıbbi kayıt bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: medicalRecord,
+            data: {
+                record
+            }
         });
     }
     catch (error) {
@@ -44,11 +50,13 @@ const getMedicalRecordById = (req, res, next) => __awaiter(void 0, void 0, void 
 exports.getMedicalRecordById = getMedicalRecordById;
 const getMedicalRecordsByPatientId = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { patientId } = req.params;
-        const medicalRecords = yield (0, medical_record_service_1.getMedicalRecordsByPatientIdService)(Number(patientId));
+        const patientId = Number(req.params.patientId);
+        const records = yield (0, medical_record_service_1.getMedicalRecordsByPatientIdService)(patientId);
         res.status(200).json({
             status: 'success',
-            data: medicalRecords,
+            data: {
+                records
+            }
         });
     }
     catch (error) {
@@ -58,10 +66,13 @@ const getMedicalRecordsByPatientId = (req, res, next) => __awaiter(void 0, void 
 exports.getMedicalRecordsByPatientId = getMedicalRecordsByPatientId;
 const createMedicalRecord = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const newMedicalRecord = yield (0, medical_record_service_1.createMedicalRecordService)(req.body);
+        const recordData = schema_registry_1.medicalRecordCreateSchema.parse(req.body);
+        const record = yield (0, medical_record_service_1.createMedicalRecordService)(recordData);
         res.status(201).json({
             status: 'success',
-            data: newMedicalRecord,
+            data: {
+                record
+            }
         });
     }
     catch (error) {
@@ -71,15 +82,18 @@ const createMedicalRecord = (req, res, next) => __awaiter(void 0, void 0, void 0
 exports.createMedicalRecord = createMedicalRecord;
 const updateMedicalRecord = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingRecord = yield (0, medical_record_service_1.getMedicalRecordByIdService)(Number(id));
-        if (!existingRecord) {
-            throw new error_middleware_1.AppError('Medical record not found', 404);
+        const id = Number(req.params.id);
+        const recordData = schema_registry_1.medicalRecordUpdateSchema.parse(req.body);
+        const record = yield (0, medical_record_service_1.updateMedicalRecordService)(id, recordData);
+        if (!record) {
+            next(new error_middleware_1.AppError('Tıbbi kayıt bulunamadı', 404));
+            return;
         }
-        const updatedMedicalRecord = yield (0, medical_record_service_1.updateMedicalRecordService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedMedicalRecord,
+            data: {
+                record
+            }
         });
     }
     catch (error) {
@@ -89,13 +103,16 @@ const updateMedicalRecord = (req, res, next) => __awaiter(void 0, void 0, void 0
 exports.updateMedicalRecord = updateMedicalRecord;
 const deleteMedicalRecord = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingRecord = yield (0, medical_record_service_1.getMedicalRecordByIdService)(Number(id));
-        if (!existingRecord) {
-            throw new error_middleware_1.AppError('Medical record not found', 404);
+        const id = Number(req.params.id);
+        const record = yield (0, medical_record_service_1.deleteMedicalRecordService)(id);
+        if (!record) {
+            next(new error_middleware_1.AppError('Tıbbi kayıt bulunamadı', 404));
+            return;
         }
-        yield (0, medical_record_service_1.deleteMedicalRecordService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);

@@ -22,13 +22,13 @@ export class AppError extends Error {
 export const handlePrismaError = (error: PrismaError): AppError => {
   switch (error.code) {
     case 'P2002':
-      return new AppError('Bu benzersiz alan zaten mevcut.', 400);
+      return new AppError('This unique field already exists.', 400);
     case 'P2025':
-      return new AppError('Kayıt bulunamadı.', 404);
+      return new AppError('Record not found.', 404);
     case 'P2003':
-      return new AppError('Geçersiz ilişki referansı.', 400);
+      return new AppError('Invalid relationship reference.', 400);
     default:
-      return new AppError('Veritabanı işlemi başarısız oldu.', 500);
+      return new AppError('Database operation failed.', 500);
   }
 };
 
@@ -38,7 +38,7 @@ export const handleZodError = (error: ZodError): AppError => {
     message: err.message,
   }));
 
-  return new AppError('Doğrulama hatası', 400, validationErrors);
+  return new AppError('Validation error', 400, validationErrors);
 };
 
 export const errorHandler = (
@@ -47,7 +47,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  console.error('Hata:', err);
+  console.error('Error:', err);
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
@@ -79,6 +79,6 @@ export const errorHandler = (
 
   res.status(500).json({
     status: 'error',
-    message: 'Beklenmeyen bir hata oluştu.',
+    message: 'An unexpected error occurred.',
   });
 }; 

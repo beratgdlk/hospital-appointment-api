@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteDoctor = exports.updateDoctor = exports.createDoctor = exports.getDoctorById = exports.getAllDoctors = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const doctor_service_1 = require("../services/doctor.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
 const getAllDoctors = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -17,7 +18,9 @@ const getAllDoctors = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         const doctors = yield (0, doctor_service_1.getAllDoctorsService)();
         res.status(200).json({
             status: 'success',
-            data: doctors,
+            data: {
+                doctors
+            }
         });
     }
     catch (error) {
@@ -27,14 +30,17 @@ const getAllDoctors = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.getAllDoctors = getAllDoctors;
 const getDoctorById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const doctor = yield (0, doctor_service_1.getDoctorByIdService)(Number(id));
+        const id = Number(req.params.id);
+        const doctor = yield (0, doctor_service_1.getDoctorByIdService)(id);
         if (!doctor) {
-            throw new error_middleware_1.AppError('Doctor not found', 404);
+            next(new error_middleware_1.AppError('Doktor bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: doctor,
+            data: {
+                doctor
+            }
         });
     }
     catch (error) {
@@ -44,10 +50,13 @@ const getDoctorById = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.getDoctorById = getDoctorById;
 const createDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const newDoctor = yield (0, doctor_service_1.createDoctorService)(req.body);
+        const doctorData = schema_registry_1.doctorCreateSchema.parse(req.body);
+        const doctor = yield (0, doctor_service_1.createDoctorService)(doctorData);
         res.status(201).json({
             status: 'success',
-            data: newDoctor,
+            data: {
+                doctor
+            }
         });
     }
     catch (error) {
@@ -57,15 +66,18 @@ const createDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
 exports.createDoctor = createDoctor;
 const updateDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingDoctor = yield (0, doctor_service_1.getDoctorByIdService)(Number(id));
-        if (!existingDoctor) {
-            throw new error_middleware_1.AppError('Doctor not found', 404);
+        const id = Number(req.params.id);
+        const doctorData = schema_registry_1.doctorUpdateSchema.parse(req.body);
+        const doctor = yield (0, doctor_service_1.updateDoctorService)(id, doctorData);
+        if (!doctor) {
+            next(new error_middleware_1.AppError('Doktor bulunamadı', 404));
+            return;
         }
-        const updatedDoctor = yield (0, doctor_service_1.updateDoctorService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedDoctor,
+            data: {
+                doctor
+            }
         });
     }
     catch (error) {
@@ -75,13 +87,16 @@ const updateDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
 exports.updateDoctor = updateDoctor;
 const deleteDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingDoctor = yield (0, doctor_service_1.getDoctorByIdService)(Number(id));
-        if (!existingDoctor) {
-            throw new error_middleware_1.AppError('Doctor not found', 404);
+        const id = Number(req.params.id);
+        const doctor = yield (0, doctor_service_1.deleteDoctorService)(id);
+        if (!doctor) {
+            next(new error_middleware_1.AppError('Doktor bulunamadı', 404));
+            return;
         }
-        yield (0, doctor_service_1.deleteDoctorService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);

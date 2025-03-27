@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePatient = exports.updatePatient = exports.createPatient = exports.getPatientById = exports.getAllPatients = void 0;
+exports.deletePatient = exports.updatePatient = exports.createPatient = exports.getPatientByEmail = exports.getPatientById = exports.getAllPatients = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const patient_service_1 = require("../services/patient.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
 const getAllPatients = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -17,7 +18,9 @@ const getAllPatients = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         const patients = yield (0, patient_service_1.getAllPatientsService)();
         res.status(200).json({
             status: 'success',
-            data: patients,
+            data: {
+                patients
+            }
         });
     }
     catch (error) {
@@ -27,14 +30,17 @@ const getAllPatients = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
 exports.getAllPatients = getAllPatients;
 const getPatientById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const patient = yield (0, patient_service_1.getPatientByIdService)(Number(id));
+        const id = Number(req.params.id);
+        const patient = yield (0, patient_service_1.getPatientByIdService)(id);
         if (!patient) {
-            throw new error_middleware_1.AppError('Patient not found', 404);
+            next(new error_middleware_1.AppError('Hasta bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: patient,
+            data: {
+                patient
+            }
         });
     }
     catch (error) {
@@ -42,16 +48,35 @@ const getPatientById = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.getPatientById = getPatientById;
+const getPatientByEmail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email = req.params.email;
+        const patient = yield (0, patient_service_1.getPatientByEmailService)(email);
+        if (!patient) {
+            next(new error_middleware_1.AppError('Hasta bulunamadı', 404));
+            return;
+        }
+        res.status(200).json({
+            status: 'success',
+            data: {
+                patient
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getPatientByEmail = getPatientByEmail;
 const createPatient = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const existingPatient = yield (0, patient_service_1.getPatientByEmailService)(req.body.email);
-        if (existingPatient) {
-            throw new error_middleware_1.AppError('A patient with this email already exists', 400);
-        }
-        const newPatient = yield (0, patient_service_1.createPatientService)(req.body);
+        const patientData = schema_registry_1.patientCreateSchema.parse(req.body);
+        const patient = yield (0, patient_service_1.createPatientService)(patientData);
         res.status(201).json({
             status: 'success',
-            data: newPatient,
+            data: {
+                patient
+            }
         });
     }
     catch (error) {
@@ -61,21 +86,18 @@ const createPatient = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.createPatient = createPatient;
 const updatePatient = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingPatient = yield (0, patient_service_1.getPatientByIdService)(Number(id));
-        if (!existingPatient) {
-            throw new error_middleware_1.AppError('Patient not found', 404);
+        const id = Number(req.params.id);
+        const patientData = schema_registry_1.patientUpdateSchema.parse(req.body);
+        const patient = yield (0, patient_service_1.updatePatientService)(id, patientData);
+        if (!patient) {
+            next(new error_middleware_1.AppError('Hasta bulunamadı', 404));
+            return;
         }
-        if (req.body.email && req.body.email !== existingPatient.email) {
-            const patientWithEmail = yield (0, patient_service_1.getPatientByEmailService)(req.body.email);
-            if (patientWithEmail) {
-                throw new error_middleware_1.AppError('A patient with this email already exists', 400);
-            }
-        }
-        const updatedPatient = yield (0, patient_service_1.updatePatientService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedPatient,
+            data: {
+                patient
+            }
         });
     }
     catch (error) {
@@ -85,13 +107,16 @@ const updatePatient = (req, res, next) => __awaiter(void 0, void 0, void 0, func
 exports.updatePatient = updatePatient;
 const deletePatient = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingPatient = yield (0, patient_service_1.getPatientByIdService)(Number(id));
-        if (!existingPatient) {
-            throw new error_middleware_1.AppError('Patient not found', 404);
+        const id = Number(req.params.id);
+        const patient = yield (0, patient_service_1.deletePatientService)(id);
+        if (!patient) {
+            next(new error_middleware_1.AppError('Hasta bulunamadı', 404));
+            return;
         }
-        yield (0, patient_service_1.deletePatientService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);

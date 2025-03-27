@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDepartment = exports.updateDepartment = exports.createDepartment = exports.getDepartmentById = exports.getAllDepartments = void 0;
+exports.removeHeadDoctor = exports.assignHeadDoctor = exports.deleteDepartment = exports.updateDepartment = exports.createDepartment = exports.getDepartmentById = exports.getAllDepartments = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const department_service_1 = require("../services/department.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
 const getAllDepartments = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -17,7 +18,9 @@ const getAllDepartments = (req, res, next) => __awaiter(void 0, void 0, void 0, 
         const departments = yield (0, department_service_1.getAllDepartmentsService)();
         res.status(200).json({
             status: 'success',
-            data: departments,
+            data: {
+                departments
+            }
         });
     }
     catch (error) {
@@ -27,14 +30,17 @@ const getAllDepartments = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 exports.getAllDepartments = getAllDepartments;
 const getDepartmentById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const department = yield (0, department_service_1.getDepartmentByIdService)(Number(id));
+        const id = Number(req.params.id);
+        const department = yield (0, department_service_1.getDepartmentByIdService)(id);
         if (!department) {
-            throw new error_middleware_1.AppError('Department not found', 404);
+            next(new error_middleware_1.AppError('Departman bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: department,
+            data: {
+                department
+            }
         });
     }
     catch (error) {
@@ -44,10 +50,13 @@ const getDepartmentById = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 exports.getDepartmentById = getDepartmentById;
 const createDepartment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const newDepartment = yield (0, department_service_1.createDepartmentService)(req.body);
+        const departmentData = schema_registry_1.departmentCreateSchema.parse(req.body);
+        const department = yield (0, department_service_1.createDepartmentService)(departmentData);
         res.status(201).json({
             status: 'success',
-            data: newDepartment,
+            data: {
+                department
+            }
         });
     }
     catch (error) {
@@ -57,15 +66,18 @@ const createDepartment = (req, res, next) => __awaiter(void 0, void 0, void 0, f
 exports.createDepartment = createDepartment;
 const updateDepartment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingDepartment = yield (0, department_service_1.getDepartmentByIdService)(Number(id));
-        if (!existingDepartment) {
-            throw new error_middleware_1.AppError('Department not found', 404);
+        const id = Number(req.params.id);
+        const departmentData = schema_registry_1.departmentUpdateSchema.parse(req.body);
+        const department = yield (0, department_service_1.updateDepartmentService)(id, departmentData);
+        if (!department) {
+            next(new error_middleware_1.AppError('Departman bulunamadı', 404));
+            return;
         }
-        const updatedDepartment = yield (0, department_service_1.updateDepartmentService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedDepartment,
+            data: {
+                department
+            }
         });
     }
     catch (error) {
@@ -75,16 +87,60 @@ const updateDepartment = (req, res, next) => __awaiter(void 0, void 0, void 0, f
 exports.updateDepartment = updateDepartment;
 const deleteDepartment = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingDepartment = yield (0, department_service_1.getDepartmentByIdService)(Number(id));
-        if (!existingDepartment) {
-            throw new error_middleware_1.AppError('Department not found', 404);
+        const id = Number(req.params.id);
+        const department = yield (0, department_service_1.deleteDepartmentService)(id);
+        if (!department) {
+            next(new error_middleware_1.AppError('Departman bulunamadı', 404));
+            return;
         }
-        yield (0, department_service_1.deleteDepartmentService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);
     }
 });
 exports.deleteDepartment = deleteDepartment;
+const assignHeadDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const departmentId = Number(req.params.departmentId);
+        const doctorId = Number(req.params.doctorId);
+        const department = yield (0, department_service_1.assignHeadDoctorService)(departmentId, doctorId);
+        if (!department) {
+            next(new error_middleware_1.AppError('Departman veya doktor bulunamadı', 404));
+            return;
+        }
+        res.status(200).json({
+            status: 'success',
+            data: {
+                department
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.assignHeadDoctor = assignHeadDoctor;
+const removeHeadDoctor = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const departmentId = Number(req.params.departmentId);
+        const department = yield (0, department_service_1.removeHeadDoctorService)(departmentId);
+        if (!department) {
+            next(new error_middleware_1.AppError('Departman bulunamadı', 404));
+            return;
+        }
+        res.status(200).json({
+            status: 'success',
+            data: {
+                department
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.removeHeadDoctor = removeHeadDoctor;

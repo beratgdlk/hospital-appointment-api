@@ -69,4 +69,29 @@ export const baseMedicalRecordSchema = z.object({
   date: z.date(),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+// Yeni: Hasta geçmişi takibi için şema
+export const basePatientHistorySchema = z.object({
+  id: z.number(),
+  patientId: z.number(),
+  recordType: z.enum(['appointment', 'medical_record', 'prescription', 'test_result', 'other']),
+  recordId: z.number(),
+  action: z.enum(['created', 'updated', 'canceled', 'completed']),
+  details: z.string().nullable(),
+  performedBy: z.number(), // Kullanıcı ID (doktor veya admin)
+  performedAt: z.date(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+// New: Schema for patient history tracking
+export const patientHistorySchema = z.object({
+  id: z.number().optional(),
+  patientId: z.number(),
+  recordType: z.string(),
+  details: z.string(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+  performedBy: z.number(), // User ID (doctor or admin)
 }); 

@@ -8,20 +8,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserByEmail = exports.getUserById = exports.getAllUsers = void 0;
+const schema_registry_1 = require("../schemas/schema.registry");
 const user_service_1 = require("../services/user.service");
 const error_middleware_1 = require("../middlewares/error.middleware");
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const getAllUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield (0, user_service_1.getAllUsersService)();
         res.status(200).json({
             status: 'success',
-            data: users,
+            data: {
+                users
+            }
         });
     }
     catch (error) {
@@ -31,14 +30,17 @@ const getAllUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
 exports.getAllUsers = getAllUsers;
 const getUserById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const user = yield (0, user_service_1.getUserByIdService)(Number(id));
+        const id = Number(req.params.id);
+        const user = yield (0, user_service_1.getUserByIdService)(id);
         if (!user) {
-            throw new error_middleware_1.AppError('User not found', 404);
+            next(new error_middleware_1.AppError('Kullanıcı bulunamadı', 404));
+            return;
         }
         res.status(200).json({
             status: 'success',
-            data: user,
+            data: {
+                user
+            }
         });
     }
     catch (error) {
@@ -46,19 +48,35 @@ const getUserById = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getUserById = getUserById;
+const getUserByEmail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const email = req.params.email;
+        const user = yield (0, user_service_1.getUserByEmailService)(email);
+        if (!user) {
+            next(new error_middleware_1.AppError('Kullanıcı bulunamadı', 404));
+            return;
+        }
+        res.status(200).json({
+            status: 'success',
+            data: {
+                user
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getUserByEmail = getUserByEmail;
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const existingUser = yield (0, user_service_1.getUserByEmailService)(req.body.email);
-        if (existingUser) {
-            throw new error_middleware_1.AppError('A user with this email already exists', 400);
-        }
-        // Hash password
-        const hashedPassword = yield bcrypt_1.default.hash(req.body.password, 10);
-        const userData = Object.assign(Object.assign({}, req.body), { password: hashedPassword });
-        const newUser = yield (0, user_service_1.createUserService)(userData);
+        const userData = schema_registry_1.userCreateSchema.parse(req.body);
+        const user = yield (0, user_service_1.createUserService)(userData);
         res.status(201).json({
             status: 'success',
-            data: newUser,
+            data: {
+                user
+            }
         });
     }
     catch (error) {
@@ -68,25 +86,18 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 exports.createUser = createUser;
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingUser = yield (0, user_service_1.getUserByIdService)(Number(id));
-        if (!existingUser) {
-            throw new error_middleware_1.AppError('User not found', 404);
+        const id = Number(req.params.id);
+        const userData = schema_registry_1.userUpdateSchema.parse(req.body);
+        const user = yield (0, user_service_1.updateUserService)(id, userData);
+        if (!user) {
+            next(new error_middleware_1.AppError('Kullanıcı bulunamadı', 404));
+            return;
         }
-        if (req.body.email && req.body.email !== existingUser.email) {
-            const userWithEmail = yield (0, user_service_1.getUserByEmailService)(req.body.email);
-            if (userWithEmail) {
-                throw new error_middleware_1.AppError('A user with this email already exists', 400);
-            }
-        }
-        // Hash password if it's being updated
-        if (req.body.password) {
-            req.body.password = yield bcrypt_1.default.hash(req.body.password, 10);
-        }
-        const updatedUser = yield (0, user_service_1.updateUserService)(Number(id), req.body);
         res.status(200).json({
             status: 'success',
-            data: updatedUser,
+            data: {
+                user
+            }
         });
     }
     catch (error) {
@@ -96,13 +107,16 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 exports.updateUser = updateUser;
 const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const existingUser = yield (0, user_service_1.getUserByIdService)(Number(id));
-        if (!existingUser) {
-            throw new error_middleware_1.AppError('User not found', 404);
+        const id = Number(req.params.id);
+        const user = yield (0, user_service_1.deleteUserService)(id);
+        if (!user) {
+            next(new error_middleware_1.AppError('Kullanıcı bulunamadı', 404));
+            return;
         }
-        yield (0, user_service_1.deleteUserService)(Number(id));
-        res.status(204).send();
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
     }
     catch (error) {
         next(error);

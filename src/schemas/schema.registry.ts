@@ -6,9 +6,10 @@ import {
   basePatientSchema,
   baseAppointmentSchema,
   baseMedicalRecordSchema,
+  basePatientHistorySchema,
 } from './base.schema';
 
-// Tip referansları
+// Type references
 type Ref<T> = T;
 
 // Önceden tanımlı tipler
@@ -66,6 +67,7 @@ export interface Patient {
   updatedAt: Date;
   medicalRecords: MedicalRecord[];
   appointments: Appointment[];
+  history: PatientHistory[];
 }
 
 export interface Appointment {
@@ -96,15 +98,30 @@ export interface MedicalRecord {
   doctor: Doctor;
 }
 
-// Temel modeller için şemalar - ilişkisiz
+export interface PatientHistory {
+  id: number;
+  patientId: number;
+  recordType: 'appointment' | 'medical_record' | 'prescription' | 'test_result' | 'other';
+  recordId: number;
+  action: 'created' | 'updated' | 'canceled' | 'completed';
+  details: string | null;
+  performedBy: number;
+  performedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  patient: Patient;
+}
+
+// Base schemas for models - without relationships
 export const userSchema = baseUserSchema;
 export const doctorSchema = baseDoctorSchema;
 export const departmentSchema = baseDepartmentSchema;
 export const patientSchema = basePatientSchema;
 export const appointmentSchema = baseAppointmentSchema;
 export const medicalRecordSchema = baseMedicalRecordSchema;
+export const patientHistorySchema = basePatientHistorySchema;
 
-// Create ve Update şemaları
+// Create and Update schemas
 export const userCreateSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -169,21 +186,30 @@ export const medicalRecordCreateSchema = z.object({
 
 export const medicalRecordUpdateSchema = medicalRecordCreateSchema.partial();
 
-// Export tip tanımlamaları
-export type UserCreateSchema = z.infer<typeof userCreateSchema>;
-export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
+export const patientHistoryCreateSchema = z.object({
+  patientId: z.number(),
+  recordType: z.enum(['appointment', 'medical_record', 'prescription', 'test_result', 'other']),
+  recordId: z.number(),
+  action: z.enum(['created', 'updated', 'canceled', 'completed']),
+  details: z.string().optional().nullable(),
+  performedBy: z.number(),
+  performedAt: z.date().optional().default(() => new Date()),
+});
 
-export type PatientCreateSchema = z.infer<typeof patientCreateSchema>;
-export type PatientUpdateSchema = z.infer<typeof patientUpdateSchema>;
+export const patientHistoryUpdateSchema = patientHistoryCreateSchema.partial();
 
-export type DoctorCreateSchema = z.infer<typeof doctorCreateSchema>;
-export type DoctorUpdateSchema = z.infer<typeof doctorUpdateSchema>;
-
-export type DepartmentCreateSchema = z.infer<typeof departmentCreateSchema>;
-export type DepartmentUpdateSchema = z.infer<typeof departmentUpdateSchema>;
-
-export type AppointmentCreateSchema = z.infer<typeof appointmentCreateSchema>;
-export type AppointmentUpdateSchema = z.infer<typeof appointmentUpdateSchema>;
-
-export type MedicalRecordCreateSchema = z.infer<typeof medicalRecordCreateSchema>;
-export type MedicalRecordUpdateSchema = z.infer<typeof medicalRecordUpdateSchema>; 
+// Export type definitions
+export type UserCreate = z.infer<typeof userCreateSchema>;
+export type UserUpdate = z.infer<typeof userUpdateSchema>;
+export type PatientCreate = z.infer<typeof patientCreateSchema>;
+export type PatientUpdate = z.infer<typeof patientUpdateSchema>;
+export type DoctorCreate = z.infer<typeof doctorCreateSchema>;
+export type DoctorUpdate = z.infer<typeof doctorUpdateSchema>;
+export type DepartmentCreate = z.infer<typeof departmentCreateSchema>;
+export type DepartmentUpdate = z.infer<typeof departmentUpdateSchema>;
+export type AppointmentCreate = z.infer<typeof appointmentCreateSchema>;
+export type AppointmentUpdate = z.infer<typeof appointmentUpdateSchema>;
+export type MedicalRecordCreate = z.infer<typeof medicalRecordCreateSchema>;
+export type MedicalRecordUpdate = z.infer<typeof medicalRecordUpdateSchema>;
+export type PatientHistoryCreate = z.infer<typeof patientHistoryCreateSchema>;
+export type PatientHistoryUpdate = z.infer<typeof patientHistoryUpdateSchema>; 

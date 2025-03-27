@@ -10,69 +10,147 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAppointmentService = exports.updateAppointmentService = exports.createAppointmentService = exports.getAppointmentsByDoctorIdService = exports.getAppointmentsByPatientIdService = exports.getAppointmentByIdService = exports.getAllAppointmentsService = void 0;
-const database_1 = require("../config/database");
+const client_1 = require("@prisma/client");
+const prismaClient = new client_1.PrismaClient();
+/**
+ * Tüm randevuları getirir
+ * @returns Tüm randevular
+ */
 const getAllAppointmentsService = () => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.findMany({
+    return yield prismaClient.appointment.findMany({
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.getAllAppointmentsService = getAllAppointmentsService;
+/**
+ * ID'ye göre randevu getirir
+ * @param id Randevu ID'si
+ * @returns Randevu
+ */
 const getAppointmentByIdService = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.findUnique({
+    return yield prismaClient.appointment.findUnique({
         where: { id },
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.getAppointmentByIdService = getAppointmentByIdService;
+/**
+ * Hasta ID'sine göre randevuları getirir
+ * @param patientId Hasta ID'si
+ * @returns Randevular
+ */
 const getAppointmentsByPatientIdService = (patientId) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.findMany({
+    return yield prismaClient.appointment.findMany({
         where: { patientId },
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.getAppointmentsByPatientIdService = getAppointmentsByPatientIdService;
+/**
+ * Doktor ID'sine göre randevuları getirir
+ * @param doctorId Doktor ID'si
+ * @returns Randevular
+ */
 const getAppointmentsByDoctorIdService = (doctorId) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.findMany({
+    return yield prismaClient.appointment.findMany({
         where: { doctorId },
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.getAppointmentsByDoctorIdService = getAppointmentsByDoctorIdService;
-const createAppointmentService = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.create({
-        data,
+/**
+ * Yeni randevu oluşturur
+ * @param data Randevu verileri
+ * @returns Oluşturulan randevu
+ */
+const createAppointmentService = (validatedData) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prismaClient.appointment.create({
+        data: {
+            date: validatedData.date,
+            status: validatedData.status ? validatedData.status : 'scheduled',
+            doctorId: validatedData.doctorId,
+            patientId: validatedData.patientId,
+            notes: validatedData.notes || null,
+        },
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.createAppointmentService = createAppointmentService;
-const updateAppointmentService = (id, data) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.update({
+/**
+ * Randevu günceller
+ * @param id Randevu ID'si
+ * @param data Güncelleme verileri
+ * @returns Güncellenen randevu
+ */
+const updateAppointmentService = (id, validatedData) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield prismaClient.appointment.update({
         where: { id },
-        data,
+        data: {
+            date: validatedData.date,
+            status: validatedData.status ? validatedData.status : undefined,
+            doctorId: validatedData.doctorId,
+            patientId: validatedData.patientId,
+            notes: validatedData.notes,
+        },
         include: {
+            doctor: {
+                include: {
+                    user: true,
+                    department: true,
+                },
+            },
             patient: true,
-            doctor: true,
         },
     });
 });
 exports.updateAppointmentService = updateAppointmentService;
+/**
+ * Randevu siler
+ * @param id Randevu ID'si
+ * @returns Silinen randevu
+ */
 const deleteAppointmentService = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return database_1.prisma.appointment.delete({
+    return yield prismaClient.appointment.delete({
         where: { id },
     });
 });

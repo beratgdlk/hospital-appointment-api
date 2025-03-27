@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.errorHandler = exports.handlePrismaError = exports.AppError = void 0;
+exports.errorHandler = exports.handleZodError = exports.handlePrismaError = exports.AppError = void 0;
+const zod_1 = require("zod");
 class AppError extends Error {
     constructor(message, statusCode, validationErrors) {
         super(message);
@@ -15,31 +16,50 @@ exports.AppError = AppError;
 const handlePrismaError = (error) => {
     switch (error.code) {
         case 'P2002':
-            return new AppError('Bu benzersiz alan zaten mevcut.', 400);
+            return new AppError('This unique field already exists.', 400);
         case 'P2025':
-            return new AppError('Kayıt bulunamadı.', 404);
+            return new AppError('Record not found.', 404);
         case 'P2003':
-            return new AppError('Geçersiz ilişki referansı.', 400);
+            return new AppError('Invalid relationship reference.', 400);
         default:
-            return new AppError('Veritabanı işlemi başarısız oldu.', 500);
+            return new AppError('Database operation failed.', 500);
     }
 };
 exports.handlePrismaError = handlePrismaError;
+const handleZodError = (error) => {
+    const validationErrors = error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+    }));
+    return new AppError('Validation error', 400, validationErrors);
+};
+exports.handleZodError = handleZodError;
 const errorHandler = (err, req, res, next) => {
-    console.error('Hata:', err);
+    console.error('Error:', err);
     if (err instanceof AppError) {
-        return res.status(err.statusCode).json(Object.assign({ status: err.status, message: err.message }, (err.validationErrors && { errors: err.validationErrors })));
+        res.status(err.statusCode).json(Object.assign({ status: err.status, message: err.message }, (err.validationErrors && { errors: err.validationErrors })));
+        return;
+    }
+    if (err instanceof zod_1.ZodError) {
+        const zodError = (0, exports.handleZodError)(err);
+        res.status(zodError.statusCode).json({
+            status: zodError.status,
+            message: zodError.message,
+            errors: zodError.validationErrors,
+        });
+        return;
     }
     if ('code' in err) {
         const prismaError = (0, exports.handlePrismaError)(err);
-        return res.status(prismaError.statusCode).json({
+        res.status(prismaError.statusCode).json({
             status: prismaError.status,
             message: prismaError.message,
         });
+        return;
     }
-    return res.status(500).json({
+    res.status(500).json({
         status: 'error',
-        message: 'Beklenmeyen bir hata oluştu.',
+        message: 'An unexpected error occurred.',
     });
 };
 exports.errorHandler = errorHandler;
