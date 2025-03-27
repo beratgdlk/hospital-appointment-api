@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +14,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "@types/express-rate-limit": "^6.0.2",
     "@types/node": "^22.13.13",
     "express": "^4.21.2",
     "prisma": "^6.5.0",
@@ -24,8 +24,12 @@
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "socket.io": "^4.8.1",
     "zod": "^3.24.2"
   }

@@ -26,7 +26,7 @@ export const getAllPatientsService = async (): Promise<Patient[]> => {
     },
   });
 
-  return patients.map(patient => patientSchema.parse(patient) as Patient);
+  return patients.map((patient: any) => patientSchema.parse(patient) as Patient);
 };
 
 export const getPatientByIdService = async (id: number): Promise<Patient | null> => {

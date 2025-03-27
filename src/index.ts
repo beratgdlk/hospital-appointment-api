@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import helmet from 'helmet';
 import { errorHandler } from './middlewares/error.middleware';
+import { apiLimiter, authLimiter } from './middlewares/rate-limiter.middleware';
 import userRoutes from './routes/user.routes';
 import patientRoutes from './routes/patient.routes';
 import doctorRoutes from './routes/doctor.routes';
@@ -9,10 +11,14 @@ import departmentRoutes from './routes/department.routes';
 import appointmentRoutes from './routes/appointment.routes';
 import medicalRecordRoutes from './routes/medical-record.routes';
 import patientHistoryRoutes from './routes/patient-history.routes';
+import authRoutes from './routes/auth.routes';
 import { initSocketServer } from './services/socket.service';
 
 const app = express();
 const server = http.createServer(app);
+
+// Security headers with Helmet
+app.use(helmet());
 
 // CORS configuration
 const corsOptions = {
@@ -24,12 +30,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Apply rate limiting to all requests
+app.use(apiLimiter);
+
 // Basic route for testing
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Hospital Appointment API' });
 });
 
-// Routes
+// Routes with specific rate limits
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);

@@ -40,7 +40,7 @@ export const getPatientById = async (
     const patient = await getPatientByIdService(id);
     
     if (!patient) {
-      next(new AppError('Hasta bulunamadı', 404));
+      next(new AppError('Patient not found', 404, true));
       return;
     }
     
@@ -66,7 +66,7 @@ export const getPatientByEmail = async (
     const patient = await getPatientByEmailService(email);
     
     if (!patient) {
-      next(new AppError('Hasta bulunamadı', 404));
+      next(new AppError('Patient not found', 404, true));
       return;
     }
     
@@ -114,7 +114,7 @@ export const updatePatient = async (
     const patient = await updatePatientService(id, patientData);
     
     if (!patient) {
-      next(new AppError('Hasta bulunamadı', 404));
+      next(new AppError('Patient not found', 404, true));
       return;
     }
     
@@ -140,7 +140,7 @@ export const deletePatient = async (
     const patient = await deletePatientService(id);
     
     if (!patient) {
-      next(new AppError('Hasta bulunamadı', 404));
+      next(new AppError('Patient not found', 404, true));
       return;
     }
     

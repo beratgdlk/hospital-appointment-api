@@ -41,7 +41,7 @@ export const getAppointmentById = async (
     const appointment = await getAppointmentByIdService(id);
     
     if (!appointment) {
-      next(new AppError('Randevu bulunamadı', 404));
+      next(new AppError('Appointment not found', 404, true));
       return;
     }
     
@@ -131,7 +131,7 @@ export const updateAppointment = async (
     const appointment = await updateAppointmentService(id, appointmentData);
     
     if (!appointment) {
-      next(new AppError('Randevu bulunamadı', 404));
+      next(new AppError('Appointment not found', 404, true));
       return;
     }
     
@@ -157,7 +157,7 @@ export const deleteAppointment = async (
     const appointment = await deleteAppointmentService(id);
     
     if (!appointment) {
-      next(new AppError('Randevu bulunamadı', 404));
+      next(new AppError('Appointment not found', 404, true));
       return;
     }
     

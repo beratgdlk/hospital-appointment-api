@@ -1,11 +1,14 @@
 import { Server } from 'socket.io';
 import http from 'http';
+import { prisma } from '../config/database';
 import { 
   TypedServer, 
   PatientCallData, 
   WaitingRoomUpdate,
   PatientHistoryUpdate,
-  CallStatus 
+  CallStatus,
+  WaitingPatient,
+  UpdatePatientStatusData
 } from '../types/socket.types';
 
 /**
@@ -31,51 +34,129 @@ export const initSocketServer = (server: http.Server): TypedServer => {
     console.log(`Socket connected: ${socket.id}`);
 
     // Listen for doctor's patient call event
-    socket.on('callPatient', (data) => {
-      const callData: PatientCallData = {
-        appointmentId: data.appointmentId,
-        patientId: 0, // Will be retrieved from service layer or database
-        patientName: '', // Will be retrieved from service layer or database
-        doctorId: 0, // Will be retrieved from current session or database
-        doctorName: '', // Will be retrieved from current session or database
-        roomNumber: data.roomNumber,
-        status: CallStatus.CALLED,
-        timestamp: new Date()
-      };
+    socket.on('callPatient', async (data) => {
+      try {
+        // Get appointment and patient information from database
+        const appointment = await prisma.appointment.findUnique({
+          where: { id: data.appointmentId },
+          include: {
+            patient: true,
+            doctor: {
+              include: { user: true }
+            }
+          }
+        });
 
-      // Broadcast patient call event
-      io.emit('patientCall', callData);
+        if (!appointment) {
+          console.error(`Appointment not found: ${data.appointmentId}`);
+          return;
+        }
+
+        const callData: PatientCallData = {
+          appointmentId: data.appointmentId,
+          patientId: appointment.patient.id,
+          patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
+          doctorId: appointment.doctor.id,
+          doctorName: `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`,
+          roomNumber: data.roomNumber,
+          status: CallStatus.CALLED,
+          timestamp: new Date()
+        };
+
+        // Broadcast patient call event
+        io.emit('patientCall', callData);
+      } catch (error) {
+        console.error('Error calling patient:', error);
+      }
     });
 
     // When doctor updates patient status
-    socket.on('updatePatientStatus', (data) => {
-      // Call to service layer to update patient status in database
+    socket.on('updatePatientStatus', async (data: UpdatePatientStatusData & { roomNumber?: string }) => {
+      try {
+        // Update appointment status
+        await prisma.appointment.update({
+          where: { id: data.appointmentId },
+          data: { status: data.status }
+        });
 
-      // Broadcast the update
-      io.emit('patientCall', {
-        appointmentId: data.appointmentId,
-        patientId: 0, // Will be retrieved from service layer or database
-        patientName: '', // Will be retrieved from service layer or database
-        doctorId: 0, // Will be retrieved from current session or database
-        doctorName: '', // Will be retrieved from current session or database
-        roomNumber: '', // Will be retrieved from service layer or database
-        status: data.status,
-        timestamp: new Date()
-      });
+        // Get updated appointment information
+        const appointment = await prisma.appointment.findUnique({
+          where: { id: data.appointmentId },
+          include: {
+            patient: true,
+            doctor: {
+              include: { user: true }
+            }
+          }
+        });
+
+        if (!appointment) {
+          console.error(`Appointment not found: ${data.appointmentId}`);
+          return;
+        }
+
+        // Broadcast the update
+        io.emit('patientCall', {
+          appointmentId: data.appointmentId,
+          patientId: appointment.patient.id,
+          patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
+          doctorId: appointment.doctor.id,
+          doctorName: `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`,
+          roomNumber: data.roomNumber || '',
+          status: data.status,
+          timestamp: new Date()
+        });
+      } catch (error) {
+        console.error('Error updating patient status:', error);
+      }
     });
 
     // Request for waiting room status
-    socket.on('getWaitingRoomStatus', (departmentId) => {
-      // Call to service layer to get waiting room status from database
+    socket.on('getWaitingRoomStatus', async (departmentId) => {
+      try {
+        // Get waiting patients by department
+        const waitingAppointments = await prisma.appointment.findMany({
+          where: {
+            doctor: {
+              departmentId: departmentId
+            },
+            status: 'scheduled',
+            date: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              lt: new Date(new Date().setHours(23, 59, 59, 999))
+            }
+          },
+          include: {
+            patient: true,
+            doctor: {
+              include: { user: true }
+            }
+          },
+          orderBy: {
+            date: 'asc'
+          }
+        });
 
-      // Example data
-      const waitingRoomData: WaitingRoomUpdate = {
-        departmentId: departmentId,
-        waitingPatients: [] // Will be retrieved from service layer or database
-      };
+        // Prepare waiting room data
+        const waitingRoomData: WaitingRoomUpdate = {
+          departmentId: departmentId,
+          waitingPatients: waitingAppointments.map((appointment: any) => ({
+            appointmentId: appointment.id,
+            patientId: appointment.patient.id,
+            patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
+            doctorId: appointment.doctor.id,
+            doctorName: `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`,
+            appointmentTime: appointment.date,
+            waitingSince: appointment.createdAt || new Date(),
+            status: appointment.status
+          } as WaitingPatient))
+        };
 
-      // Emit waiting room update
-      socket.emit('waitingRoomUpdate', waitingRoomData);
+        // Emit waiting room update
+        socket.emit('waitingRoomUpdate', waitingRoomData);
+      } catch (error) {
+        console.error('Error fetching waiting room status:', error);
+      }
     });
 
     // When connection closes

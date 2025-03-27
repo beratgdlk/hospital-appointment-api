@@ -34,6 +34,7 @@ export type Patient = {
     updatedAt: Date;
     medicalRecords: MedicalRecord[];
     appointments: Appointment[];
+    history: PatientHistory[];
 };
 
 export type Doctor = {
@@ -91,6 +92,20 @@ export type MedicalRecord = {
     updatedAt: Date;
     patient: Patient;
     doctor: Doctor;
+};
+
+export type PatientHistory = {
+    id: number;
+    patientId: number;
+    recordType: 'appointment' | 'medical_record' | 'prescription' | 'test_result' | 'other';
+    recordId: number;
+    action: 'created' | 'updated' | 'canceled' | 'completed';
+    details: string | null;
+    performedBy: number;
+    performedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    patient: Patient;
 };
 
 // Input Types

@@ -120,7 +120,7 @@ export const assignHeadDoctorService = async (
   });
 
   if (!doctor) {
-    throw new Error(`Doktor ID ${doctorId} bulunamadı.`);
+    throw new Error(`Doctor with ID ${doctorId} not found.`);
   }
 
   // If the doctor doesn't belong to this department, first update their department

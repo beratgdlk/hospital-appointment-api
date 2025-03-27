@@ -47,6 +47,7 @@ export interface CallPatientData {
 export interface UpdatePatientStatusData {
   appointmentId: number;
   status: CallStatus;
+  roomNumber?: string; // Opsiyonel oda numarası
 }
 
 export interface PatientHistoryUpdate {
@@ -65,6 +66,8 @@ export interface WaitingPatient {
   appointmentId: number;
   patientId: number;
   patientName: string;
+  doctorId: number; // Doktor ID'si
+  doctorName: string; // Doktor adı
   appointmentTime: Date;
   waitingSince: Date;
   status: CallStatus;

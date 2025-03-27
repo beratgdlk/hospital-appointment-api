@@ -1,14 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database';
 import { AppointmentCreate, AppointmentUpdate } from '../schemas/schema.registry';
 
-const prismaClient = new PrismaClient();
-
 /**
- * Tüm randevuları getirir
- * @returns Tüm randevular
+ * Gets all appointments
+ * @returns All appointments
  */
 export const getAllAppointmentsService = async () => {
-  return await prismaClient.appointment.findMany({
+  return await prisma.appointment.findMany({
     include: {
       doctor: {
         include: {
@@ -22,12 +20,12 @@ export const getAllAppointmentsService = async () => {
 };
 
 /**
- * ID'ye göre randevu getirir
- * @param id Randevu ID'si
- * @returns Randevu
+ * Gets an appointment by ID
+ * @param id Appointment ID
+ * @returns Appointment
  */
 export const getAppointmentByIdService = async (id: number) => {
-  return await prismaClient.appointment.findUnique({
+  return await prisma.appointment.findUnique({
     where: { id },
     include: {
       doctor: {
@@ -42,12 +40,12 @@ export const getAppointmentByIdService = async (id: number) => {
 };
 
 /**
- * Hasta ID'sine göre randevuları getirir
- * @param patientId Hasta ID'si
- * @returns Randevular
+ * Gets appointments by patient ID
+ * @param patientId Patient ID
+ * @returns Appointments
  */
 export const getAppointmentsByPatientIdService = async (patientId: number) => {
-  return await prismaClient.appointment.findMany({
+  return await prisma.appointment.findMany({
     where: { patientId },
     include: {
       doctor: {
@@ -62,12 +60,12 @@ export const getAppointmentsByPatientIdService = async (patientId: number) => {
 };
 
 /**
- * Doktor ID'sine göre randevuları getirir
- * @param doctorId Doktor ID'si
- * @returns Randevular
+ * Gets appointments by doctor ID
+ * @param doctorId Doctor ID
+ * @returns Appointments
  */
 export const getAppointmentsByDoctorIdService = async (doctorId: number) => {
-  return await prismaClient.appointment.findMany({
+  return await prisma.appointment.findMany({
     where: { doctorId },
     include: {
       doctor: {
@@ -82,12 +80,12 @@ export const getAppointmentsByDoctorIdService = async (doctorId: number) => {
 };
 
 /**
- * Yeni randevu oluşturur
- * @param data Randevu verileri
- * @returns Oluşturulan randevu
+ * Creates a new appointment
+ * @param data Appointment data
+ * @returns Created appointment
  */
 export const createAppointmentService = async (validatedData: AppointmentCreate) => {
-  return await prismaClient.appointment.create({
+  return await prisma.appointment.create({
     data: {
       date: validatedData.date,
       status: validatedData.status ? validatedData.status as any : 'scheduled',
@@ -108,13 +106,13 @@ export const createAppointmentService = async (validatedData: AppointmentCreate)
 };
 
 /**
- * Randevu günceller
- * @param id Randevu ID'si
- * @param data Güncelleme verileri
- * @returns Güncellenen randevu
+ * Updates an appointment
+ * @param id Appointment ID
+ * @param data Update data
+ * @returns Updated appointment
  */
 export const updateAppointmentService = async (id: number, validatedData: AppointmentUpdate) => {
-  return await prismaClient.appointment.update({
+  return await prisma.appointment.update({
     where: { id },
     data: {
       date: validatedData.date,
@@ -136,12 +134,12 @@ export const updateAppointmentService = async (id: number, validatedData: Appoin
 };
 
 /**
- * Randevu siler
- * @param id Randevu ID'si
- * @returns Silinen randevu
+ * Deletes an appointment
+ * @param id Appointment ID
+ * @returns Deleted appointment
  */
 export const deleteAppointmentService = async (id: number) => {
-  return await prismaClient.appointment.delete({
+  return await prisma.appointment.delete({
     where: { id },
   });
 }; 

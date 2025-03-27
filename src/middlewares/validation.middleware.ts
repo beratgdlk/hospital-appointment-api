@@ -13,7 +13,7 @@ export const validate = (schema: ZodSchema) => {
           field: err.path.join('.'),
           message: err.message,
         }));
-        next(new AppError('Validasyon hatası', 400, validationErrors));
+        next(new AppError('Validation error', 400, true, validationErrors));
       } else {
         next(error);
       }

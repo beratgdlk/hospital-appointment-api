@@ -15,7 +15,7 @@ export const getAllMedicalRecordsService = async (): Promise<MedicalRecord[]> =>
     },
   });
 
-  return records.map(record => medicalRecordSchema.parse(record) as MedicalRecord);
+  return records.map((record: any) => medicalRecordSchema.parse(record) as MedicalRecord);
 };
 
 export const getMedicalRecordByIdService = async (id: number): Promise<MedicalRecord | null> => {
@@ -49,7 +49,7 @@ export const getMedicalRecordsByPatientIdService = async (patientId: number): Pr
     },
   });
 
-  return records.map(record => medicalRecordSchema.parse(record) as MedicalRecord);
+  return records.map((record: any) => medicalRecordSchema.parse(record) as MedicalRecord);
 };
 
 export const createMedicalRecordService = async (data: unknown): Promise<MedicalRecord> => {
@@ -152,7 +152,7 @@ export const getPatientMedicalRecordsService = async (patientId: number): Promis
     },
   });
 
-  return records.map(record => medicalRecordSchema.parse(record) as MedicalRecord);
+  return records.map((record: any) => medicalRecordSchema.parse(record) as MedicalRecord);
 };
 
 export const getDoctorMedicalRecordsService = async (doctorId: number): Promise<MedicalRecord[]> => {
@@ -169,5 +169,5 @@ export const getDoctorMedicalRecordsService = async (doctorId: number): Promise<
     },
   });
 
-  return records.map(record => medicalRecordSchema.parse(record) as MedicalRecord);
+  return records.map((record: any) => medicalRecordSchema.parse(record) as MedicalRecord);
 }; 

@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database';
 import { PatientHistoryCreate, PatientHistoryUpdate } from '../schemas/schema.registry';
 import { emitPatientHistoryUpdate } from './socket.service';
-
-const prisma = new PrismaClient();
 
 // Using 'any' type temporarily to avoid TypeScript errors
 // This can be removed when the Prisma schema is properly generated

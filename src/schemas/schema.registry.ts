@@ -9,108 +9,18 @@ import {
   basePatientHistorySchema,
 } from './base.schema';
 
+import type {
+  User,
+  Doctor,
+  Department,
+  Patient,
+  Appointment,
+  MedicalRecord,
+  PatientHistory
+} from '../types/types';
+
 // Type references
 type Ref<T> = T;
-
-// Önceden tanımlı tipler
-export interface User {
-  id: number;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  createdAt: Date;
-  updatedAt: Date;
-  doctor?: Doctor | null;
-}
-
-export interface Doctor {
-  id: number;
-  userId: number;
-  departmentId: number;
-  specialization: string;
-  licenseNumber: string;
-  experience: number;
-  education: string;
-  managedDepartmentId: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-  user: Omit<User, 'doctor'>;
-  department: Department;
-  appointments: Appointment[];
-  medicalRecords: MedicalRecord[];
-  managedDepartment: Department | null;
-}
-
-export interface Department {
-  id: number;
-  name: string;
-  description: string | null;
-  location: string;
-  createdAt: Date;
-  updatedAt: Date;
-  doctors: Doctor[];
-  headDoctor: Doctor | null;
-}
-
-export interface Patient {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: Date;
-  gender: string;
-  address: string;
-  createdAt: Date;
-  updatedAt: Date;
-  medicalRecords: MedicalRecord[];
-  appointments: Appointment[];
-  history: PatientHistory[];
-}
-
-export interface Appointment {
-  id: number;
-  date: Date;
-  status: string;
-  doctorId: number;
-  patientId: number;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  doctor: Doctor;
-  patient: Patient;
-}
-
-export interface MedicalRecord {
-  id: number;
-  patientId: number;
-  doctorId: number;
-  diagnosis: string;
-  treatment: string;
-  prescription: string | null;
-  notes: string | null;
-  date: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  patient: Patient;
-  doctor: Doctor;
-}
-
-export interface PatientHistory {
-  id: number;
-  patientId: number;
-  recordType: 'appointment' | 'medical_record' | 'prescription' | 'test_result' | 'other';
-  recordId: number;
-  action: 'created' | 'updated' | 'canceled' | 'completed';
-  details: string | null;
-  performedBy: number;
-  performedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  patient: Patient;
-}
 
 // Base schemas for models - without relationships
 export const userSchema = baseUserSchema;

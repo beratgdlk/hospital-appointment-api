@@ -1,12 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database';
 import { UserCreate, UserUpdate } from '../schemas/schema.registry';
 import bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
-
 /**
- * Tüm kullanıcıları getirir
- * @returns Tüm kullanıcılar
+ * Gets all users
+ * @returns All users
  */
 export const getAllUsersService = async () => {
   return await prisma.user.findMany({
@@ -17,9 +15,9 @@ export const getAllUsersService = async () => {
 };
 
 /**
- * ID'ye göre kullanıcı getirir
- * @param id Kullanıcı ID'si
- * @returns Kullanıcı
+ * Gets a user by ID
+ * @param id User ID
+ * @returns User
  */
 export const getUserByIdService = async (id: number) => {
   return await prisma.user.findUnique({
@@ -31,9 +29,9 @@ export const getUserByIdService = async (id: number) => {
 };
 
 /**
- * E-posta adresine göre kullanıcı getirir
- * @param email E-posta adresi
- * @returns Kullanıcı
+ * Gets a user by email
+ * @param email User email
+ * @returns User
  */
 export const getUserByEmailService = async (email: string) => {
   return await prisma.user.findUnique({
@@ -45,9 +43,9 @@ export const getUserByEmailService = async (email: string) => {
 };
 
 /**
- * Yeni kullanıcı oluşturur
- * @param data Kullanıcı verileri
- * @returns Oluşturulan kullanıcı
+ * Creates a new user
+ * @param data User data
+ * @returns Created user
  */
 export const createUserService = async (userData: UserCreate) => {
   const salt = await bcrypt.genSalt(10);
@@ -68,10 +66,10 @@ export const createUserService = async (userData: UserCreate) => {
 };
 
 /**
- * Kullanıcı günceller
- * @param id Kullanıcı ID'si
- * @param data Güncelleme verileri
- * @returns Güncellenen kullanıcı
+ * Updates a user
+ * @param id User ID
+ * @param data Update data
+ * @returns Updated user
  */
 export const updateUserService = async (id: number, userData: UserUpdate) => {
   const updateData: any = { ...userData };
@@ -95,9 +93,9 @@ export const updateUserService = async (id: number, userData: UserUpdate) => {
 };
 
 /**
- * Kullanıcı siler
- * @param id Kullanıcı ID'si
- * @returns Silinen kullanıcı
+ * Deletes a user
+ * @param id User ID
+ * @returns Deleted user
  */
 export const deleteUserService = async (id: number) => {
   return await prisma.user.delete({

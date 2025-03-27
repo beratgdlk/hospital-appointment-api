@@ -41,7 +41,7 @@ export const getDepartmentById = async (
     const department = await getDepartmentByIdService(id);
     
     if (!department) {
-      next(new AppError('Departman bulunamadı', 404));
+      next(new AppError('Department not found', 404, true));
       return;
     }
     
@@ -89,7 +89,7 @@ export const updateDepartment = async (
     const department = await updateDepartmentService(id, departmentData);
     
     if (!department) {
-      next(new AppError('Departman bulunamadı', 404));
+      next(new AppError('Department not found', 404, true));
       return;
     }
     
@@ -115,7 +115,7 @@ export const deleteDepartment = async (
     const department = await deleteDepartmentService(id);
     
     if (!department) {
-      next(new AppError('Departman bulunamadı', 404));
+      next(new AppError('Department not found', 404, true));
       return;
     }
     
@@ -140,7 +140,7 @@ export const assignHeadDoctor = async (
     const department = await assignHeadDoctorService(departmentId, doctorId);
     
     if (!department) {
-      next(new AppError('Departman veya doktor bulunamadı', 404));
+      next(new AppError('Department or doctor not found', 404, true));
       return;
     }
     
@@ -166,7 +166,7 @@ export const removeHeadDoctor = async (
     const department = await removeHeadDoctorService(departmentId);
     
     if (!department) {
-      next(new AppError('Departman bulunamadı', 404));
+      next(new AppError('Department not found', 404, true));
       return;
     }
     

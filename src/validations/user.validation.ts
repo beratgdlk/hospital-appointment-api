@@ -1,18 +1,22 @@
 import { z } from 'zod';
 
-export const userSchema = z.object({
-  email: z.string().email('Geçerli bir e-posta adresi giriniz'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
-  firstName: z.string().min(2, 'Ad en az 2 karakter olmalıdır'),
-  lastName: z.string().min(2, 'Soyad en az 2 karakter olmalıdır'),
+export const userCreateSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  firstName: z.string().min(2),
+  lastName: z.string().min(2),
   role: z.enum(['admin', 'doctor', 'secretary'], {
-    errorMap: () => ({ message: 'Geçerli bir rol seçiniz (admin, doctor, secretary)' }),
+    errorMap: () => ({ message: 'Please select a valid role (admin, doctor, secretary)' }),
   }),
 });
 
-export const userUpdateSchema = userSchema.extend({
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır').optional(),
-}).partial();
+export const userUpdateSchema = z.object({
+  email: z.string().email().optional(),
+  password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().min(2).optional(),
+  role: z.enum(['admin', 'doctor', 'secretary']).optional(),
+});
 
-export const validateUser = (data: unknown) => userSchema.parse(data);
+export const validateUser = (data: unknown) => userCreateSchema.parse(data);
 export const validateUserUpdate = (data: unknown) => userUpdateSchema.parse(data); 

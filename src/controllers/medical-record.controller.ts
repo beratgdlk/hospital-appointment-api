@@ -40,7 +40,7 @@ export const getMedicalRecordById = async (
     const record = await getMedicalRecordByIdService(id);
     
     if (!record) {
-      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      next(new AppError('Medical record not found', 404, true));
       return;
     }
     
@@ -109,7 +109,7 @@ export const updateMedicalRecord = async (
     const record = await updateMedicalRecordService(id, recordData);
     
     if (!record) {
-      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      next(new AppError('Medical record not found', 404, true));
       return;
     }
     
@@ -135,7 +135,7 @@ export const deleteMedicalRecord = async (
     const record = await deleteMedicalRecordService(id);
     
     if (!record) {
-      next(new AppError('Tıbbi kayıt bulunamadı', 404));
+      next(new AppError('Medical record not found', 404, true));
       return;
     }
     

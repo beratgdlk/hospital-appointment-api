@@ -40,7 +40,7 @@ export const getUserById = async (
     const user = await getUserByIdService(id);
     
     if (!user) {
-      next(new AppError('Kullanıcı bulunamadı', 404));
+      next(new AppError('User not found', 404, true));
       return;
     }
     
@@ -66,7 +66,7 @@ export const getUserByEmail = async (
     const user = await getUserByEmailService(email);
     
     if (!user) {
-      next(new AppError('Kullanıcı bulunamadı', 404));
+      next(new AppError('User not found', 404, true));
       return;
     }
     
@@ -114,7 +114,7 @@ export const updateUser = async (
     const user = await updateUserService(id, userData);
     
     if (!user) {
-      next(new AppError('Kullanıcı bulunamadı', 404));
+      next(new AppError('User not found', 404, true));
       return;
     }
     
@@ -140,7 +140,7 @@ export const deleteUser = async (
     const user = await deleteUserService(id);
     
     if (!user) {
-      next(new AppError('Kullanıcı bulunamadı', 404));
+      next(new AppError('User not found', 404, true));
       return;
     }
     

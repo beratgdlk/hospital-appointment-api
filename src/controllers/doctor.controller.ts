@@ -39,7 +39,7 @@ export const getDoctorById = async (
     const doctor = await getDoctorByIdService(id);
     
     if (!doctor) {
-      next(new AppError('Doktor bulunamadı', 404));
+      next(new AppError('Doctor not found', 404, true));
       return;
     }
     
@@ -87,7 +87,7 @@ export const updateDoctor = async (
     const doctor = await updateDoctorService(id, doctorData);
     
     if (!doctor) {
-      next(new AppError('Doktor bulunamadı', 404));
+      next(new AppError('Doctor not found', 404, true));
       return;
     }
     
@@ -113,7 +113,7 @@ export const deleteDoctor = async (
     const doctor = await deleteDoctorService(id);
     
     if (!doctor) {
-      next(new AppError('Doktor bulunamadı', 404));
+      next(new AppError('Doctor not found', 404, true));
       return;
     }
     

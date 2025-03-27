@@ -47,7 +47,7 @@ export const getPatientHistoryById = async (
     const record = await getPatientHistoryByIdService(id);
     
     if (!record) {
-      next(new AppError('Patient history record not found', 404));
+      next(new AppError('Patient history record not found', 404, true));
       return;
     }
     
@@ -150,7 +150,7 @@ export const updatePatientHistory = async (
     const record = await updatePatientHistoryService(id, historyData);
     
     if (!record) {
-      next(new AppError('Patient history record not found', 404));
+      next(new AppError('Patient history record not found', 404, true));
       return;
     }
     
@@ -179,7 +179,7 @@ export const deletePatientHistory = async (
     const record = await deletePatientHistoryService(id);
     
     if (!record) {
-      next(new AppError('Patient history record not found', 404));
+      next(new AppError('Patient history record not found', 404, true));
       return;
     }
     
