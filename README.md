@@ -1,4 +1,4 @@
-# Hospital Appointment API
+# Hospital Appointment API 
 
 A comprehensive backend API for a modern and secure hospital appointment system.
 
