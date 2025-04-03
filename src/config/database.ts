@@ -8,11 +8,6 @@ export const prisma = new PrismaClient({
     : ['error'],
 });
 
-// Capture events at connection start and termination
-prisma.$on('beforeExit', async () => {
-  console.log('Closing Prisma Client connection');
-});
-
 // Global error handler
 prisma.$use(async (params: any, next: (params: any) => Promise<any>) => {
   try {
